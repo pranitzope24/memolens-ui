@@ -1,7 +1,5 @@
 "use client";
-import chatAnim from "@/assets/animations/chat.json";
 import { ChatUI } from "@/components/ChatUI";
-import LottieWrapper from "@/components/LottieWrapper";
 import { motion } from "framer-motion";
 
 export default function SearchPage() {
@@ -12,14 +10,6 @@ export default function SearchPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        <LottieWrapper animation={chatAnim} className="w-52 h-52 mb-6" />
-      </motion.div>
-
       <h2 className="text-3xl font-semibold mb-4 text-gray-800">
         Search Your Photos
       </h2>

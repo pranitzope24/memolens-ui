@@ -1,92 +1,71 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image as ImageIcon, Upload, X } from "lucide-react";
+import { Image as ImageIcon, Upload, X, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { uploadFile } from "@/lib/apiService"; // ✅ Axios-based API service
 
 export function FileUploader() {
   const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
-  // Generate preview URLs for image files and stable ids per file
+  // Preview URLs
   const previews = useMemo(() => {
     return files.map((file) => {
       const id = `${file.name}-${file.size}-${file.lastModified}`;
       try {
-        return {
-          id,
-          file,
-          // createObjectURL works for most image types
-          url: URL.createObjectURL(file),
-        };
-      } catch (e) {
+        return { id, file, url: URL.createObjectURL(file) };
+      } catch {
         return { id, file, url: null };
       }
     });
   }, [files]);
 
-  // Track previews that failed to load so we can show a fallback
-  const [erroredPreviews, setErroredPreviews] = useState<Record<string, boolean>>({});
-
-  // Revoke object URLs when files change or on unmount
   useEffect(() => {
     return () => {
       previews.forEach((p) => {
         if (p.url) URL.revokeObjectURL(p.url);
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files]);
+  }, [previews]);
 
-  // Remove a single file (and revoke its object URL)
   const removeFile = (id: string) => {
     const preview = previews.find((p) => p.id === id);
-    if (preview && preview.url) {
-      try {
-        URL.revokeObjectURL(preview.url);
-      } catch (e) {
-        /* ignore */
-      }
-    }
+    if (preview?.url) URL.revokeObjectURL(preview.url);
     setFiles((prev) => prev.filter((f) => `${f.name}-${f.size}-${f.lastModified}` !== id));
-    setErroredPreviews((prev) => {
-      const copy = { ...prev };
-      delete copy[id];
-      return copy;
-    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
+    setFiles(Array.from(e.target.files));
+  };
 
-    const inputFiles = Array.from(e.target.files);
+  const handleUpload = async () => {
+    if (files.length === 0) {
+      setUploadStatus("Please select at least one file");
+      return;
+    }
 
-    // Process HEIC/HEIF files: convert them client-side to JPEG using heic2any
-    const convertAndSet = async () => {
-      const converted = await Promise.all(
-        inputFiles.map(async (file) => {
-          const name = file.name.toLowerCase();
-          const isHeic = name.endsWith(".heic") || name.endsWith(".heif") || file.type === "image/heic";
-          if (!isHeic) return file;
+    setIsUploading(true);
+    setUploadStatus(null);
 
-          try {
-            const mod = await import(/* webpackChunkName: "heic2any" */ "heic2any");
-            const heic2any = (mod as any).default ?? mod;
-            const blob: Blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
-            const jpgName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
-            const jpgFile = new File([blob], jpgName, { type: "image/jpeg", lastModified: Date.now() });
-            return jpgFile;
-          } catch (err) {
-            // If conversion fails, fall back to the original file so user can still download it
-            // Marking preview as errored will show a download link
-            return file;
-          }
-        })
-      );
+    try {
+      for (const file of files) {
+        await uploadFile(file, (percent) => setUploadProgress(percent));
+        console.log(`✅ ${file.name} uploaded successfully`);
+      }
 
-      setFiles(converted);
-    };
-
-    void convertAndSet();
+      setUploadStatus("✅ All files uploaded successfully!");
+      setFiles([]);
+      setUploadProgress(0);
+    } catch (err: any) {
+      console.error("❌ Upload error:", err);
+      setUploadStatus(`❌ Upload failed: ${err.message}`);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -94,6 +73,7 @@ export function FileUploader() {
       className="w-full max-w-lg p-8 bg-white shadow-lg rounded-2xl border border-gray-100"
       whileHover={{ scale: 1.02 }}
     >
+      {/* Upload area */}
       <label
         htmlFor="file-upload"
         className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition"
@@ -110,7 +90,8 @@ export function FileUploader() {
         />
       </label>
 
-      {files.length > 0 && (
+      {/* Previews */}
+      {previews.length > 0 && (
         <motion.div
           className="mt-6 grid grid-cols-3 gap-3"
           initial={{ opacity: 0 }}
@@ -122,37 +103,18 @@ export function FileUploader() {
               className="relative rounded-lg bg-gray-100 p-1 flex flex-col items-center text-sm overflow-hidden"
               whileHover={{ scale: 1.05 }}
             >
-              {/* remove button */}
               <button
                 onClick={() => removeFile(p.id)}
                 className="absolute top-1 right-1 bg-white/80 rounded-full p-1 hover:bg-white"
-                aria-label={`Remove ${p.file.name}`}
-                title="Remove"
               >
                 <X className="w-3 h-3 text-gray-700" />
               </button>
-
-              {p.url && !erroredPreviews[p.id] ? (
+              {p.url ? (
                 <img
                   src={p.url}
                   alt={p.file.name}
                   className="w-full h-24 object-cover rounded-md mb-2"
-                  onError={() => setErroredPreviews((s) => ({ ...s, [p.id]: true }))}
                 />
-              ) : p.url && erroredPreviews[p.id] ? (
-                <div className="w-full h-24 flex items-center justify-center rounded-md bg-white/60 mb-2">
-                  <div className="text-center">
-                    <ImageIcon className="w-8 h-8 text-gray-500 mx-auto mb-1" />
-                    <a
-                      href={p.url}
-                      download={p.file.name}
-                      className="text-xs text-blue-600 underline"
-                    >
-                      Download
-                    </a>
-                    <div className="text-xs text-gray-500">Preview not available</div>
-                  </div>
-                </div>
               ) : (
                 <ImageIcon className="w-8 h-8 text-gray-500 mb-1" />
               )}
@@ -162,12 +124,36 @@ export function FileUploader() {
         </motion.div>
       )}
 
+      {/* Upload button */}
       <motion.button
-        className="mt-6 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition"
+        className="mt-6 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
         whileTap={{ scale: 0.95 }}
+        onClick={handleUpload}
+        disabled={isUploading}
       >
-        Upload
+        {isUploading ? (
+          <>
+            <Loader2 className="animate-spin w-4 h-4" /> Uploading... {uploadProgress}%
+          </>
+        ) : (
+          "Upload"
+        )}
       </motion.button>
+
+      {/* Status message */}
+      {uploadStatus && (
+        <p
+          className={`mt-4 text-center text-sm ${
+            uploadStatus.startsWith("✅")
+              ? "text-green-600"
+              : uploadStatus.startsWith("❌")
+              ? "text-red-600"
+              : "text-gray-600"
+          }`}
+        >
+          {uploadStatus}
+        </p>
+      )}
     </motion.div>
   );
 }
