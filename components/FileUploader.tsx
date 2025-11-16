@@ -1,17 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image as ImageIcon, Upload, X, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Loader2, Sparkles, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { uploadFile } from "@/lib/apiService"; // ✅ Axios-based API service
 
 export function FileUploader() {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
-  // Preview URLs
   const previews = useMemo(() => {
     return files.map((file) => {
       const id = `${file.name}-${file.size}-${file.lastModified}`;
@@ -44,28 +41,20 @@ export function FileUploader() {
 
   const handleUpload = async () => {
     if (files.length === 0) {
-      setUploadStatus("Please select at least one file");
+      setUploadStatus("📸 Please select at least one image to upload.");
       return;
     }
 
     setIsUploading(true);
     setUploadStatus(null);
 
-    try {
-      for (const file of files) {
-        await uploadFile(file, (percent) => setUploadProgress(percent));
-        console.log(`✅ ${file.name} uploaded successfully`);
-      }
+    // 🔧 Backend not ready yet → show "Coming Soon"
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setIsUploading(false);
+    setUploadStatus("🚧 This feature is coming soon! Stay tuned.");
 
-      setUploadStatus("✅ All files uploaded successfully!");
-      setFiles([]);
-      setUploadProgress(0);
-    } catch (err: any) {
-      console.error("❌ Upload error:", err);
-      setUploadStatus(`❌ Upload failed: ${err.message}`);
-    } finally {
-      setIsUploading(false);
-    }
+    // Optionally clear selected files after showing message
+    setFiles([]);
   };
 
   return (
@@ -133,10 +122,12 @@ export function FileUploader() {
       >
         {isUploading ? (
           <>
-            <Loader2 className="animate-spin w-4 h-4" /> Uploading... {uploadProgress}%
+            <Loader2 className="animate-spin w-4 h-4" /> Uploading...
           </>
         ) : (
-          "Upload"
+          <>
+            <Sparkles className="w-4 h-4" /> Upload
+          </>
         )}
       </motion.button>
 
@@ -144,9 +135,9 @@ export function FileUploader() {
       {uploadStatus && (
         <p
           className={`mt-4 text-center text-sm ${
-            uploadStatus.startsWith("✅")
-              ? "text-green-600"
-              : uploadStatus.startsWith("❌")
+            uploadStatus.includes("🚧")
+              ? "text-blue-600"
+              : uploadStatus.includes("❌")
               ? "text-red-600"
               : "text-gray-600"
           }`}

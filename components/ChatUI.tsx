@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import typingAnim from "@/assets/animations/chat.json";
+import LottieWrapper from "@/components/LottieWrapper";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
-import { searchPhotos } from "@/lib/apiService";
-import LottieWrapper from "@/components/LottieWrapper";
-import typingAnim from "@/assets/animations/chat.json"; // 👈 new animation
+import { useState } from "react";
 
 interface Message {
   text: string;
@@ -25,43 +24,22 @@ export function ChatUI() {
     setInput("");
     setLoading(true);
 
-    try {
-      // Add temporary "typing..." bubble before API call
-      setMessages((prev) => [
-        ...prev,
-        { text: "__loading__", sender: "bot" },
-      ]);
+    // 👇 Fake "typing" delay
+    setMessages((prev) => [...prev, { text: "__loading__", sender: "bot" }]);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // ✅ API call to backend
-      const response = await searchPhotos(input);
-      console.log("🔍 Search API Response:", response);
+    // Remove typing indicator
+    setMessages((prev) => prev.filter((m) => m.text !== "__loading__"));
 
-      // Remove the "typing" placeholder
-      setMessages((prev) => prev.filter((m) => m.text !== "__loading__"));
+    // 👇 Coming soon placeholder
+    const botMessage: Message = {
+      text:
+        "🚧 The AI photo search is coming soon! You’ll soon be able to search photos by people, places, and captions. Stay tuned 👀",
+      sender: "bot",
+    };
 
-      const botMessage: Message = {
-        text:
-          response?.reply ||
-          response?.result ||
-          JSON.stringify(response, null, 2) ||
-          "No results found.",
-        sender: "bot",
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (err: any) {
-      console.error("❌ Search failed:", err);
-
-      // Remove typing placeholder
-      setMessages((prev) => prev.filter((m) => m.text !== "__loading__"));
-
-      setMessages((prev) => [
-        ...prev,
-        { text: `Error: ${err.message}`, sender: "bot" },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    setMessages((prev) => [...prev, botMessage]);
+    setLoading(false);
   };
 
   return (
@@ -85,7 +63,6 @@ export function ChatUI() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              {/* Normal chat bubble */}
               {m.text !== "__loading__" ? (
                 <div
                   className={`px-4 py-2 rounded-2xl max-w-xs whitespace-pre-wrap ${
@@ -97,7 +74,6 @@ export function ChatUI() {
                   {m.text}
                 </div>
               ) : (
-                // 👇 Lottie loading bubble
                 <div className="bg-gray-100 rounded-2xl p-2 px-4 flex items-center justify-center w-20">
                   <LottieWrapper animation={typingAnim} className="w-12 h-6" />
                 </div>
