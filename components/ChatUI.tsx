@@ -2,6 +2,7 @@
 
 import typingAnim from "@/assets/animations/chat.json";
 import LottieWrapper from "@/components/LottieWrapper";
+import { searchPhotos } from "@/lib/apiService";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 import { useState } from "react";
@@ -9,6 +10,7 @@ import { useState } from "react";
 interface Message {
   text: string;
   sender: "user" | "bot";
+  images?: string[];
 }
 
 export function ChatUI() {
@@ -19,26 +21,40 @@ export function ChatUI() {
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
-    const userMessage = { text: input, sender: "user" as const };
+    const userMessage: Message = { text: input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
-    // 👇 Fake "typing" delay
+    // Show typing animation
     setMessages((prev) => [...prev, { text: "__loading__", sender: "bot" }]);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Remove typing indicator
-    setMessages((prev) => prev.filter((m) => m.text !== "__loading__"));
+    try {
+      const response = await searchPhotos(input);
 
-    // 👇 Coming soon placeholder
-    const botMessage: Message = {
-      text:
-        "🚧 The AI photo search is coming soon! You’ll soon be able to search photos by people, places, and captions. Stay tuned 👀",
-      sender: "bot",
-    };
+      // Remove loader
+      setMessages((prev) => prev.filter((m) => m.text !== "__loading__"));
 
-    setMessages((prev) => [...prev, botMessage]);
+      const summary = response.summary || "Here are the results.";
+      const photos = response.photos || [];
+
+      // Extract URLs
+      const urls = photos.map((p: any) => p.thumbnail_url);
+
+      const botMessage: Message = {
+        text: summary,
+        sender: "bot",
+        images: urls,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error: any) {
+      setMessages((prev) => [
+        ...prev,
+        { text: "❌ Error: " + error.message, sender: "bot" },
+      ]);
+    }
+
     setLoading(false);
   };
 
@@ -47,8 +63,8 @@ export function ChatUI() {
       className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 flex flex-col space-y-4 border border-gray-100"
       layout
     >
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 max-h-[60vh] scrollbar-thin">
+      {/* MESSAGES */}
+      <div className="flex-1 overflow-y-auto space-y-6 max-h-[60vh] scrollbar-thin">
         {messages.length === 0 ? (
           <p className="text-gray-400 text-center mt-20">
             Start typing to search your photos...
@@ -57,33 +73,51 @@ export function ChatUI() {
           messages.map((m, i) => (
             <motion.div
               key={i}
-              className={`flex ${
-                m.sender === "user" ? "justify-end" : "justify-start"
-              }`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
             >
-              {m.text !== "__loading__" ? (
-                <div
-                  className={`px-4 py-2 rounded-2xl max-w-xs whitespace-pre-wrap ${
-                    m.sender === "user"
-                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-                      : "bg-gray-100 text-gray-800"
+              {/* Chat Bubble */}
+              <div
+                className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"
                   }`}
-                >
-                  {m.text}
+              >
+                {m.text !== "__loading__" ? (
+                  <div
+                    className={`px-4 py-2 rounded-2xl max-w-xs whitespace-pre-wrap ${m.sender === "user"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                        : "bg-gray-100 text-gray-800"
+                      }`}
+                  >
+                    {m.text}
+                  </div>
+                ) : (
+                  <div className="bg-gray-100 rounded-2xl p-2 px-4 flex items-center justify-center w-20">
+                    <LottieWrapper animation={typingAnim} className="w-12 h-6" />
+                  </div>
+                )}
+              </div>
+
+              {/* Image Grid */}
+              {m.images && m.images.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 ml-2">
+                  {m.images.map((url, idx) => (
+                    <img
+                      key={idx}
+                      src={url}
+                      alt="thumbnail"
+                      className="rounded-xl w-full h-auto border shadow-sm object-contain bg-gray-50"
+                    />
+                  ))}
                 </div>
-              ) : (
-                <div className="bg-gray-100 rounded-2xl p-2 px-4 flex items-center justify-center w-20">
-                  <LottieWrapper animation={typingAnim} className="w-12 h-6" />
-                </div>
+
               )}
             </motion.div>
           ))
         )}
       </div>
 
-      {/* Input bar */}
+      {/* INPUT BAR */}
       <div className="flex items-center border-t pt-3">
         <input
           type="text"
@@ -98,9 +132,8 @@ export function ChatUI() {
           onClick={handleSend}
           whileTap={{ scale: 0.9 }}
           disabled={loading}
-          className={`ml-2 p-2 rounded-full ${
-            loading ? "bg-gray-300" : "bg-blue-500 hover:bg-blue-600"
-          } text-white`}
+          className={`ml-2 p-2 rounded-full ${loading ? "bg-gray-300" : "bg-blue-500 hover:bg-blue-600"
+            } text-white`}
         >
           <Send className="w-4 h-4" />
         </motion.button>
