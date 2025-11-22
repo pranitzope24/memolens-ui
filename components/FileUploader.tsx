@@ -1,39 +1,50 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image as ImageIcon, Loader2, Sparkles, Upload, X } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Upload,
+  Loader2,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { uploadFile } from "@/lib/apiService";
 import LottieWrapper from "@/components/LottieWrapper";
+
+// LOTTIES — your uploaded files
 import successAnim from "@/assets/animations/success.json";
-// 👉 If you want a Lottie progress animation, tell me and I’ll integrate it.
+import failureAnim from "@/assets/animations/failure.json";
 
 export function FileUploader() {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);   // NEW
-  const [showSuccess, setShowSuccess] = useState(false);     // NEW
+  const [uploadState, setUploadState] = useState<
+    "idle" | "success" | "error"
+  >("idle");
 
   const previews = useMemo(() => {
     return files.map((file) => {
       const id = `${file.name}-${file.size}-${file.lastModified}`;
-      return {
-        id,
-        file,
-        url: URL.createObjectURL(file),
-      };
+      try {
+        return { id, file, url: URL.createObjectURL(file) };
+      } catch {
+        return { id, file, url: null };
+      }
     });
   }, [files]);
 
   useEffect(() => {
     return () => {
-      previews.forEach((p) => p.url && URL.revokeObjectURL(p.url));
+      previews.forEach((p) => {
+        if (p.url) URL.revokeObjectURL(p.url);
+      });
     };
   }, [previews]);
 
   const removeFile = (id: string) => {
     const preview = previews.find((p) => p.id === id);
     if (preview?.url) URL.revokeObjectURL(preview.url);
+
     setFiles((prev) =>
       prev.filter((f) => `${f.name}-${f.size}-${f.lastModified}` !== id)
     );
@@ -45,65 +56,49 @@ export function FileUploader() {
   };
 
   const handleUpload = async () => {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      setUploadState("error");
+      return;
+    }
 
     setIsUploading(true);
-    setUploadProgress(0);
-    setShowSuccess(false);
 
     try {
-      let uploaded = 0;
+      // TODO: integrate real upload logic here
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      for (const file of files) {
-        await uploadFile(file, (percent) => {
-          const totalProgress =
-            ((uploaded + percent / 100) / files.length) * 100;
-          setUploadProgress(totalProgress);
-        });
-        uploaded += 1;
-      }
-
-      setUploadProgress(100);
-
-      // Show success animation
-      setShowSuccess(true);
-
-      // hide animation after 1.8s
-      setTimeout(() => {
-        setShowSuccess(false);
-        setFiles([]);
-      }, 1800);
-
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsUploading(false);
+      setUploadState("success");
+      setFiles([]);
+    } catch {
+      setUploadState("error");
     }
+
+    setIsUploading(false);
   };
 
+  // Reset animation after it plays ONCE
+  const handleAnimComplete = () => {
+    setTimeout(() => {
+      setUploadState("idle");
+    }, 300);
+  };
+  // return (<></>);
   return (
     <motion.div
-      className="w-full h-full p-8 bg-white shadow-xl rounded-2xl border border-gray-100 flex flex-col relative"
+      className="w-full max-w-lg p-8 bg-white shadow-lg rounded-2xl border border-gray-100 flex flex-col"
       whileHover={{ scale: 1.01 }}
     >
-      {/* SUCCESS LOTTIE */}
-      {showSuccess && (
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-md flex items-center justify-center rounded-2xl z-50">
-          <LottieWrapper animation={successAnim} className="w-40 h-40" />
-        </div>
-      )}
-
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">
+      <h3 className="text-xl font-semibold mb-6 text-gray-800 text-center">
         Upload Photos
       </h3>
 
+      {/* Drag & Drop Box */}
       <label
         htmlFor="file-upload"
-        className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition"
+        className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition bg-gray-50"
       >
-        <Upload className="w-9 h-9 text-gray-400" />
-        <p className="text-gray-600 mt-2">Click to select images</p>
-
+        <Upload className="w-10 h-10 text-gray-400" />
+        <p className="text-gray-600 mt-2">Drag & drop or click to upload</p>
         <input
           id="file-upload"
           type="file"
@@ -116,62 +111,91 @@ export function FileUploader() {
 
       {/* Previews */}
       {previews.length > 0 && (
-        <div className="mt-5 grid grid-cols-3 gap-3 flex-1 overflow-y-auto pr-1">
+        <motion.div
+          className="mt-6 grid grid-cols-3 gap-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           {previews.map((p) => (
             <motion.div
               key={p.id}
-              className="relative rounded-lg bg-gray-100 p-1 overflow-hidden shadow-sm"
-              whileHover={{ scale: 1.04 }}
+              className="relative rounded-lg bg-gray-100 p-1 flex flex-col items-center overflow-hidden"
+              whileHover={{ scale: 1.05 }}
             >
               <button
                 onClick={() => removeFile(p.id)}
-                className="absolute top-1 right-1 bg-white/80 rounded-full p-1 hover:bg-white"
+                className="absolute top-1 right-1 bg-white/90 rounded-full p-1 hover:bg-white"
               >
                 <X className="w-3 h-3 text-gray-700" />
               </button>
 
-              <img
-                src={p.url}
-                alt={p.file.name}
-                className="w-full h-24 object-cover rounded-md"
-              />
+              {p.url ? (
+                <img
+                  src={p.url}
+                  alt={p.file.name}
+                  className="w-full h-24 object-cover rounded-md mb-2"
+                />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-gray-500 mb-1" />
+              )}
 
-              <p className="truncate text-xs text-center px-1 mt-1">
+              <p className="truncate max-w-[120px] px-2 text-xs">
                 {p.file.name}
               </p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
-      {/* PROGRESS BAR */}
-      {isUploading && (
-        <div className="mt-4 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
-            style={{ width: `${uploadProgress}%` }}
-          />
-        </div>
-      )}
+      {/* Upload Button */}
+      <motion.button
+        className="mt-6 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
+        whileTap={{ scale: 0.96 }}
+        onClick={handleUpload}
+        disabled={isUploading}
+      >
+        {isUploading ? (
+          <>
+            <Loader2 className="animate-spin w-4 h-4" /> Uploading...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4" /> Upload
+          </>
+        )}
+      </motion.button>
 
-      {/* Upload button */}
-      {!showSuccess && (
-        <motion.button
-          className="mt-5 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
-          whileTap={{ scale: 0.95 }}
-          onClick={handleUpload}
-          disabled={isUploading}
+      {/* Success Animation */}
+      {uploadState === "success" && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="flex justify-center mt-5 overflow-visible"
         >
-          {isUploading ? (
-            <>
-              <Loader2 className="animate-spin w-4 h-4" /> Uploading...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" /> Upload
-            </>
-          )}
-        </motion.button>
+          <LottieWrapper
+            animation={successAnim}
+            className="w-24 h-24"
+            loop={false}
+            onComplete={handleAnimComplete}
+          />
+        </motion.div>
+      )}
+
+      {/* Failure Animation */}
+      {uploadState === "error" && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex justify-center mt-5 overflow-visible"
+        >
+          <LottieWrapper
+            animation={failureAnim}
+            className="w-24 h-24"
+            loop={false}
+            onComplete={handleAnimComplete}
+          />
+        </motion.div>
       )}
     </motion.div>
   );
