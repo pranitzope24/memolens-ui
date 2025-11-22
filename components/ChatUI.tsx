@@ -209,14 +209,19 @@ export function ChatUI() {
                   {m.images && m.images.length > 0 && (
                     <div className="grid grid-cols-3 gap-3 ml-2">
                       {m.images.map((url, idx) => (
-                        <motion.img
+                        <motion.div
                           key={idx}
-                          src={url}
-                          onClick={() => openViewer(m.images!, idx)}
                           whileHover={{ scale: 1.03 }}
-                          className="rounded-xl w-full h-32 object-cover border shadow-sm cursor-pointer bg-gray-50"
-                          alt={`photo-${idx}`}
-                        />
+                          className="aspect-square rounded-xl overflow-hidden border shadow-sm bg-gray-100 cursor-pointer"
+                          onClick={() => openViewer(m.images!, idx)}
+                        >
+                          <img
+                            src={url}
+                            alt={`photo-${idx}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </motion.div>
                       ))}
                     </div>
                   )}
