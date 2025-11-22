@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Image as ImageIcon, Loader2, Sparkles, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { uploadFile } from "@/lib/apiService";
 
 export function FileUploader() {
   const [files, setFiles] = useState<File[]>([]);
@@ -12,19 +13,17 @@ export function FileUploader() {
   const previews = useMemo(() => {
     return files.map((file) => {
       const id = `${file.name}-${file.size}-${file.lastModified}`;
-      try {
-        return { id, file, url: URL.createObjectURL(file) };
-      } catch {
-        return { id, file, url: null };
-      }
+      return {
+        id,
+        file,
+        url: URL.createObjectURL(file),
+      };
     });
   }, [files]);
 
   useEffect(() => {
     return () => {
-      previews.forEach((p) => {
-        if (p.url) URL.revokeObjectURL(p.url);
-      });
+      previews.forEach((p) => p.url && URL.revokeObjectURL(p.url));
     };
   }, [previews]);
 
@@ -41,34 +40,40 @@ export function FileUploader() {
 
   const handleUpload = async () => {
     if (files.length === 0) {
-      setUploadStatus("📸 Please select at least one image to upload.");
+      setUploadStatus("📸 Please select at least one image.");
       return;
     }
 
     setIsUploading(true);
     setUploadStatus(null);
 
-    // 🔧 Backend not ready yet → show "Coming Soon"
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsUploading(false);
-    setUploadStatus("🚧 This feature is coming soon! Stay tuned.");
+    try {
+      for (const file of files) {
+        await uploadFile(file);
+      }
+      setUploadStatus("✅ Uploaded successfully!");
+      setFiles([]);
+    } catch (err: any) {
+      setUploadStatus("❌ Upload failed: " + err.message);
+    }
 
-    // Optionally clear selected files after showing message
-    setFiles([]);
+    setIsUploading(false);
   };
 
   return (
     <motion.div
-      className="w-full max-w-lg p-8 bg-white shadow-lg rounded-2xl border border-gray-100"
-      whileHover={{ scale: 1.02 }}
+      className="w-full h-full p-8 bg-white shadow-xl rounded-2xl border border-gray-100 flex flex-col"
+      whileHover={{ scale: 1.01 }}
     >
-      {/* Upload area */}
+      <h3 className="text-xl font-semibold mb-4 text-gray-800">Upload Photos</h3>
+
       <label
         htmlFor="file-upload"
-        className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition"
+        className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition"
       >
-        <Upload className="w-10 h-10 text-gray-400" />
-        <p className="text-gray-600 mt-2">Drag & drop or click to upload</p>
+        <Upload className="w-9 h-9 text-gray-400" />
+        <p className="text-gray-600 mt-2">Click to select images</p>
+
         <input
           id="file-upload"
           type="file"
@@ -81,16 +86,12 @@ export function FileUploader() {
 
       {/* Previews */}
       {previews.length > 0 && (
-        <motion.div
-          className="mt-6 grid grid-cols-3 gap-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <div className="mt-5 grid grid-cols-3 gap-3 flex-1 overflow-y-auto pr-1">
           {previews.map((p) => (
             <motion.div
               key={p.id}
-              className="relative rounded-lg bg-gray-100 p-1 flex flex-col items-center text-sm overflow-hidden"
-              whileHover={{ scale: 1.05 }}
+              className="relative rounded-lg bg-gray-100 p-1 overflow-hidden shadow-sm"
+              whileHover={{ scale: 1.04 }}
             >
               <button
                 onClick={() => removeFile(p.id)}
@@ -98,24 +99,23 @@ export function FileUploader() {
               >
                 <X className="w-3 h-3 text-gray-700" />
               </button>
-              {p.url ? (
-                <img
-                  src={p.url}
-                  alt={p.file.name}
-                  className="w-full h-24 object-cover rounded-md mb-2"
-                />
-              ) : (
-                <ImageIcon className="w-8 h-8 text-gray-500 mb-1" />
-              )}
-              <p className="truncate max-w-[120px] px-2">{p.file.name}</p>
+
+              <img
+                src={p.url}
+                alt={p.file.name}
+                className="w-full h-24 object-cover rounded-md"
+              />
+
+              <p className="truncate text-xs text-center px-1 mt-1">
+                {p.file.name}
+              </p>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       )}
 
-      {/* Upload button */}
       <motion.button
-        className="mt-6 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
+        className="mt-5 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
         whileTap={{ scale: 0.95 }}
         onClick={handleUpload}
         disabled={isUploading}
@@ -131,19 +131,8 @@ export function FileUploader() {
         )}
       </motion.button>
 
-      {/* Status message */}
       {uploadStatus && (
-        <p
-          className={`mt-4 text-center text-sm ${
-            uploadStatus.includes("🚧")
-              ? "text-blue-600"
-              : uploadStatus.includes("❌")
-              ? "text-red-600"
-              : "text-gray-600"
-          }`}
-        >
-          {uploadStatus}
-        </p>
+        <p className="mt-3 text-center text-sm text-gray-700">{uploadStatus}</p>
       )}
     </motion.div>
   );
