@@ -148,19 +148,44 @@ export function ChatUI() {
       )}
 
       <motion.div
-        className="relative w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 flex flex-col space-y-4 border border-gray-100"
+        className="relative w-full max-w-3xl bg-white/95 backdrop-blur-sm shadow-[0_8px_20px_rgba(0,0,0,0.06)] rounded-2xl p-6 flex flex-col space-y-4 border border-gray-100"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* messages list */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-6 max-h-[60vh] custom-scroll px-1"
+          className="flex-1 overflow-y-auto space-y-6 max-h-[60vh] custom-scroll px-2 "
         >
           {messages.length === 0 ? (
-            <p className="text-gray-400 text-center mt-20">
-              Start typing to search your photos...
-            </p>
+            <div className="flex flex-col items-center mt-16 text-center space-y-6">
+              <p className="text-gray-500 text-lg">
+                Ask anything about your photos. Try one of these:
+              </p>
+
+              {/* Suggestions */}
+              <div className="flex flex-wrap justify-center gap-3 max-w-xl">
+                {[
+                  "Show me photos of Pranit",
+                  "Fetch all the photos taken in Delhi",
+                  "Fetch photos of Aryan from Delhi",
+                  "Show me photos of mountains",
+                ].map((s, idx) => (
+                  <motion.button
+                    key={idx}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setInput(s)}
+                    className="
+            px-4 py-2 rounded-full text-sm
+            bg-gray-100 text-gray-700 border border-gray-200
+            hover:bg-gray-200 transition shadow-sm
+          "
+                  >
+                    {s}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
           ) : (
             messages.map((m, i) => {
               const isLoadingMarker = m.text === "__loading__";
@@ -207,12 +232,13 @@ export function ChatUI() {
 
                   {/* IMAGES GRID (under the bubble) */}
                   {m.images && m.images.length > 0 && (
-                    <div className="grid grid-cols-3 gap-3 ml-2">
+                    <div className="grid grid-cols-3 gap-4 ml-1">
                       {m.images.map((url, idx) => (
                         <motion.div
                           key={idx}
-                          whileHover={{ scale: 1.03 }}
-                          className="aspect-square rounded-xl overflow-hidden border shadow-sm bg-gray-100 cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.18 }}
+                          className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 cursor-pointer hover:shadow-md transition"
                           onClick={() => openViewer(m.images!, idx)}
                         >
                           <img
@@ -234,29 +260,34 @@ export function ChatUI() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* input row */}
-        <div className="flex items-center border-t pt-3">
-          <input
-            type="text"
-            className="flex-1 rounded-xl border-gray-200 focus:ring-0 focus:border-blue-400 text-sm p-2"
-            placeholder="Search your photos..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            disabled={loading}
-          />
+        <div className="flex items-center gap-3 border-t pt-4">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search your photos..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              disabled={loading}
+              className="w-full py-3 pl-4 pr-11 text-[0.95rem] bg-gray-50 border border-gray-200 rounded-xl placeholder:text-gray-400 shadow-inner focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
+            />
+
+            {/* <Send className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /> */}
+          </div>
+
           <motion.button
             onClick={handleSend}
             whileTap={{ scale: 0.9 }}
             disabled={loading}
-            className={`ml-2 p-2 rounded-full ${
-              loading ? "bg-gray-300" : "bg-blue-500 hover:bg-blue-600"
-            } text-white`}
-            aria-label="send"
+            className="
+      p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500
+      text-white shadow-md hover:opacity-90 transition
+    "
           >
             <Send className="w-4 h-4" />
           </motion.button>
         </div>
+
         {showScrollButton && (
           <motion.button
             onClick={scrollToBottom}
@@ -264,33 +295,30 @@ export function ChatUI() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             whileTap={{ scale: 0.9 }}
-            className="absolute bottom-20 right-4 bg-white/90 border border-gray-200 
-               text-gray-700 p-2 rounded-full shadow-md hover:bg-white transition"
+            className="
+      absolute bottom-24 right-5 
+      bg-white/80 backdrop-blur-md 
+      border border-gray-200 
+      text-gray-700 
+      p-2.5 rounded-full 
+      shadow-lg hover:bg-white transition
+    "
             title="Scroll to bottom"
           >
-            <motion.div
-              animate={{ y: [0, 3, 0] }}
-              transition={{
-                repeat: Infinity,
-                duration: 1.4,
-                ease: "easeInOut",
-              }}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </motion.div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
           </motion.button>
         )}
       </motion.div>
