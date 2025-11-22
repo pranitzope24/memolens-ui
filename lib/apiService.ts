@@ -75,3 +75,21 @@ export async function searchPhotos(prompt: string) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+export async function addKnownFace(personName: string, file: File) {
+  const formData = new FormData();
+  formData.append("person_name", personName);
+  formData.append("file", file);
+
+  return apiRequest("/known-face/add", {
+    method: "POST",
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
+
+export async function listKnownFaces() {
+  return apiRequest("/known-face/list", {
+    method: "GET",
+  });
+}

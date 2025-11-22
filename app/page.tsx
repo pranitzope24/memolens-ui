@@ -16,61 +16,14 @@ import upload2 from "@/assets/upload2.svg";
 
 export default function HomePage() {
   const router = useRouter();
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    // Show splash for 2 seconds
-    const timer = setTimeout(() => setShowSplash(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col overflow-hidden">
-      
-      {/* 🚀 Splash Animation (Logo + Title) */}
-      <AnimatePresence>
-        {showSplash && (
-          <motion.div
-            key="splash"
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.div
-              layoutId="logoWrapper"
-              className="flex flex-col items-center gap-6"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <motion.div layoutId="logoImage">
-                <Image
-                  src={logo}
-                  alt="MemoLens Logo"
-                  width={140}
-                  height={140}
-                  priority
-                />
-              </motion.div>
-
-              <motion.span
-                layoutId="logoText"
-                className="text-6xl sm:text-7xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-              >
-                MemoLens
-              </motion.span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* 🌈 Main Page Content */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: showSplash ? 0 : 1 }}
-        transition={{ delay: 0.8, duration: 0.8 }}
-        className={`${showSplash ? "pointer-events-none" : ""}`}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
       >
         {/* Hero Section */}
         <section className="flex flex-col items-center justify-center text-center py-24 px-6 bg-gradient-to-b from-blue-50 to-purple-50">
@@ -89,8 +42,9 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.7 }}
           >
-            Upload your photos, and let AI do the rest — extract metadata, detect faces, generate captions,
-            and let you search through memories like never before.
+            Upload your photos, and let AI do the rest — extract metadata,
+            detect faces, generate captions, and let you search through memories
+            like never before.
           </motion.p>
 
           <motion.button
@@ -128,7 +82,8 @@ export default function HomePage() {
             What Makes MemoLens Smart
           </motion.h2>
           <p className="text-gray-500 max-w-2xl mx-auto mb-16">
-            Our intelligent photo processing pipeline makes your image collection searchable and meaningful.
+            Our intelligent photo processing pipeline makes your image
+            collection searchable and meaningful.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -170,7 +125,9 @@ export default function HomePage() {
                 transition={{ delay: i * 0.1 }}
               >
                 {f.icon}
-                <h3 className="text-xl font-semibold mb-2 text-gray-800">{f.title}</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                  {f.title}
+                </h3>
                 <p className="text-gray-500 text-sm mb-6">{f.desc}</p>
                 <div className="w-full h-40 relative">
                   <Image

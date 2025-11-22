@@ -1,18 +1,26 @@
 "use client";
+
 import Lottie from "lottie-react";
 
 export default function LottieWrapper({
   animation,
+  className,
   loop = true,
-  className = "w-48 h-48",
+  onComplete,
 }: {
-  animation: object;
-  loop?: boolean;
+  animation: any;
   className?: string;
+  loop?: boolean;
+  onComplete?: () => void;
 }) {
   return (
-    <div className={`flex justify-center items-center ${className}`}>
-      <Lottie animationData={animation} loop={loop} />
-    </div>
+    <Lottie
+      animationData={animation}
+      className={className}
+      loop={loop}
+      autoplay={true}
+      onComplete={onComplete}
+      style={{ overflow: "visible" }}
+    />
   );
 }
