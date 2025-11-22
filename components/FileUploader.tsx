@@ -141,12 +141,12 @@ export function FileUploader() {
         </motion.div>
       )}
 
-      {/* Upload Button */}
       <motion.button
         className="mt-6 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
         whileTap={{ scale: 0.96 }}
         onClick={handleUpload}
-        disabled={isUploading}
+        disabled={true}
+        // disabled={isUploading} KEY: STAGE
       >
         {isUploading ? (
           <>

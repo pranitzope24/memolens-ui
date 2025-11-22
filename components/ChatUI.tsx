@@ -278,7 +278,8 @@ export function ChatUI() {
           <motion.button
             onClick={handleSend}
             whileTap={{ scale: 0.9 }}
-            disabled={loading}
+            disabled={true}
+            // disabled={loading} KEY: STAGE
             className="
       p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500
       text-white shadow-md hover:opacity-90 transition

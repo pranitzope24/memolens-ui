@@ -121,7 +121,8 @@ export function KnownFaceUploader() {
       {/* Button */}
       <motion.button
         onClick={handleUpload}
-        disabled={uploadState === "uploading"}
+        disabled={true}
+        // disabled={uploadState === "uploading"} KEY: STAGE
         whileTap={{ scale: 0.96 }}
         className="mt-6 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center gap-2"
       >
