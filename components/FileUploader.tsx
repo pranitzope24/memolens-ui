@@ -1,13 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Image as ImageIcon,
-  Upload,
-  Loader2,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { Image as ImageIcon, Upload, Loader2, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import LottieWrapper from "@/components/LottieWrapper";
 
@@ -18,9 +12,9 @@ import failureAnim from "@/assets/animations/failure.json";
 export function FileUploader() {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadState, setUploadState] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+  const [uploadState, setUploadState] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
 
   const previews = useMemo(() => {
     return files.map((file) => {

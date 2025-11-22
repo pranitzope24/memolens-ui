@@ -14,8 +14,9 @@ export function KnownFaceUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  const [uploadState, setUploadState] =
-    useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [uploadState, setUploadState] = useState<
+    "idle" | "uploading" | "success" | "error"
+  >("idle");
 
   useEffect(() => {
     if (uploadState === "success" || uploadState === "error") {
@@ -64,6 +65,7 @@ export function KnownFaceUploader() {
       className="w-full p-6 bg-white shadow-lg rounded-2xl border border-gray-100 flex flex-col"
       initial={{ opacity: 0.9 }}
       animate={{ opacity: 1 }}
+      whileHover={{ scale: 1.01 }}
     >
       <h3 className="text-xl font-semibold mb-4 text-gray-800 text-center">
         Add Known Face
@@ -74,19 +76,39 @@ export function KnownFaceUploader() {
         placeholder="Enter person's name"
         value={personName}
         onChange={(e) => setPersonName(e.target.value)}
-        className="w-full px-3 py-2 border rounded-lg mb-4 focus:border-blue-500 outline-none"
+        className="
+    w-full px-3 py-2 mb-4
+    rounded-lg 
+    border border-gray-200 
+    bg-gray-50 
+    text-gray-800 
+    shadow-sm 
+    focus:bg-white 
+    focus:border-blue-500 
+    focus:ring-4 focus:ring-blue-100 
+    transition-all
+    placeholder:text-gray-400
+  "
       />
 
       {/* Upload box */}
-      <label className="flex flex-col items-center justify-center h-44 border-2 border-dashed bg-gray-50 rounded-xl cursor-pointer hover:border-blue-400 transition">
+      <label className="flex flex-col items-center justify-center h-44 border-2 border-dashed border-gray-300 bg-gray-50 rounded-xl cursor-pointer hover:border-blue-400 transition">
         <Upload className="w-9 h-9 text-gray-400" />
         <p className="text-gray-600 mt-2">Upload face image</p>
-        <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFile}
+        />
       </label>
 
       {preview && (
         <div className="relative flex justify-center mt-4">
-          <img src={preview} className="w-28 h-28 object-cover rounded-xl shadow-md" />
+          <img
+            src={preview}
+            className="w-28 h-28 object-cover rounded-xl shadow-md"
+          />
           <button
             onClick={removeFile}
             className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow hover:bg-white"
@@ -117,12 +139,20 @@ export function KnownFaceUploader() {
       {/* Animations */}
       {uploadState === "success" && (
         <div className="flex justify-center mt-4">
-          <LottieWrapper animation={successAnim} className="w-20 h-20" loop={false} />
+          <LottieWrapper
+            animation={successAnim}
+            className="w-20 h-20"
+            loop={false}
+          />
         </div>
       )}
       {uploadState === "error" && (
         <div className="flex justify-center mt-4">
-          <LottieWrapper animation={failureAnim} className="w-20 h-20" loop={false} />
+          <LottieWrapper
+            animation={failureAnim}
+            className="w-20 h-20"
+            loop={false}
+          />
         </div>
       )}
     </motion.div>
