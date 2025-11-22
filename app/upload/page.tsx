@@ -14,19 +14,14 @@ export default function Page() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Floating Header Animation */}
+      {/* Header Section (simple fade-in) */}
       <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
         className="flex flex-col items-center"
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-        >
-          <LottieWrapper animation={uploadAnim} className="w-52 h-52 mb-6" />
-        </motion.div>
+        <LottieWrapper animation={uploadAnim} className="w-52 h-52 mb-6" />
 
         <h2 className="text-3xl font-semibold mb-3 text-gray-800">
           Manage Your Photos
@@ -43,7 +38,7 @@ export default function Page() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.45, delay: 0.25 }}
           className="flex"
         >
           <FileUploader />
@@ -53,7 +48,7 @@ export default function Page() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
+          transition={{ duration: 0.45, delay: 0.35 }}
           className="flex"
         >
           <KnownFaceUploader />
