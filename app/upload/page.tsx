@@ -5,8 +5,15 @@ import { KnownFaceUploader } from "@/components/KnownFaceUploader";
 import { motion } from "framer-motion";
 import LottieWrapper from "@/components/LottieWrapper";
 import uploadAnim from "@/assets/animations/upload.json";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+
+  const router = useRouter();
+
+  if (!localStorage.getItem("token")) router.push("/login");
+
+
   return (
     <motion.div
       className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50"

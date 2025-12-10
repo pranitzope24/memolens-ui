@@ -4,8 +4,14 @@ import { ChatUI } from "@/components/ChatUI";
 import { motion } from "framer-motion";
 import LottieWrapper from "@/components/LottieWrapper";
 import searchAnim from "@/assets/animations/search.json";
+import { useRouter } from "next/navigation";
 
 export default function SearchPage() {
+
+  const router = useRouter();
+  
+  if (!localStorage.getItem("token")) router.push("/login");
+
   return (
     <motion.div
       className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-br from-purple-50 to-pink-50"

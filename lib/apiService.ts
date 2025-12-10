@@ -1,25 +1,9 @@
 // lib/apiService.ts
-import axios, { AxiosRequestConfig } from "axios";
-
-const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
-  timeout: 120000, // ⏱️ 1 minute timeout
-  headers: {
-    Accept: "application/json",
-  },
-});
-
-// ✅ Optional interceptors for logging / error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("❌ API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
+import { AxiosRequestConfig } from "axios";
+import apiClient from "./axiosClient";
 
 /**
- * Generic API request wrapper
+ * 🔹 Generic API request wrapper
  */
 export async function apiRequest<T = any>(
   url: string,
@@ -27,6 +11,7 @@ export async function apiRequest<T = any>(
 ): Promise<T> {
   try {
     const response = await apiClient({ url, ...options });
+    console.log(response);
     return response.data as T;
   } catch (err: any) {
     const message =
@@ -37,9 +22,40 @@ export async function apiRequest<T = any>(
   }
 }
 
-/**
- * Uploads a single file using multipart/form-data.
- */
+/* ============================================================
+   🔐 AUTH APIs
+   ============================================================ */
+
+export async function loginApi(email: string, password: string) {
+  return apiRequest("/auth/login", {
+    method: "POST",
+    data: { email, password },
+  });
+}
+
+export async function registerApi(
+  name: string,
+  email: string,
+  password: string
+) {
+
+  const paylaod = {
+    username: name,
+    email: email,
+    password: password
+  }
+
+  console.log(paylaod);
+  return apiRequest("/auth/register", {
+    method: "POST",
+    data: paylaod,
+  });
+}
+
+/* ============================================================
+   📤 FILE UPLOAD
+   ============================================================ */
+
 export async function uploadFile(
   file: File,
   onProgress?: (percent: number) => void
@@ -65,16 +81,23 @@ export async function uploadFile(
   return apiRequest(config.url!, config);
 }
 
-/**
- * Sends a text query to /search endpoint.
- */
+/* ============================================================
+   🔍 IMAGE SEARCH
+   ============================================================ */
+
 export async function searchPhotos(prompt: string) {
+
+  console.log(prompt);
   return apiRequest("/search-image", {
     method: "POST",
     data: { user_prompt: prompt },
     headers: { "Content-Type": "application/json" },
   });
 }
+
+/* ============================================================
+   🙂 KNOWN FACES API
+   ============================================================ */
 
 export async function addKnownFace(personName: string, file: File) {
   const formData = new FormData();
