@@ -6,13 +6,25 @@ import { motion } from "framer-motion";
 import LottieWrapper from "@/components/LottieWrapper";
 import uploadAnim from "@/assets/animations/upload.json";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Page() {
 
   const router = useRouter();
+const [checkedAuth, setCheckedAuth] = useState(false);
 
-  if (!localStorage.getItem("token")) router.push("/login");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      router.replace("/login");
+    } else {
+      setCheckedAuth(true);
+    }
+  }, [router]);
+
+  // Prevent UI flash before auth check
+  if (!checkedAuth) return null;
 
   return (
     <motion.div

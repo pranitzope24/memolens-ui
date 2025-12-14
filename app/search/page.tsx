@@ -5,12 +5,26 @@ import { motion } from "framer-motion";
 import LottieWrapper from "@/components/LottieWrapper";
 import searchAnim from "@/assets/animations/search.json";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function SearchPage() {
 
   const router = useRouter();
   
-  if (!localStorage.getItem("token")) router.push("/login");
+  const [checkedAuth, setCheckedAuth] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.replace("/login");
+    } else {
+      setCheckedAuth(true);
+    }
+  }, [router]);
+
+  // Prevent UI flash before auth check
+  if (!checkedAuth) return null;
 
   return (
     <motion.div
